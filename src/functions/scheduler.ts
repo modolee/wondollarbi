@@ -1,4 +1,5 @@
 import cron from 'cron';
+import { DEFAULT_TIMEZONE } from '../constants/time.constant';
 import { fetchAndSendMessage } from './fetch';
 
 export const exchangeRateJob = new cron.CronJob(
@@ -6,5 +7,5 @@ export const exchangeRateJob = new cron.CronJob(
   fetchAndSendMessage,
   null,
   false,
-  'Asia/Seoul'
+  DEFAULT_TIMEZONE
 );

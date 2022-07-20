@@ -1,7 +1,8 @@
 import express from 'express';
 import http from 'http';
-import { exchangeRateJob } from './functions/schduler';
+import { exchangeRateJob } from './functions/scheduler';
 import { fetchAndSendMessage } from './functions/fetch';
+const PORT = Number.parseInt(process.env.PORT, 10) || 8080;
 
 const startServer = () => {
   const app = express();
@@ -16,8 +17,8 @@ const startServer = () => {
     res.status(200).json({ status: 200, messages: 'Success' });
   });
 
-  server.listen(process.env.PORT || 8080, () => {
-    console.log(`WonDollArbi is listening on port 8080`);
+  server.listen(PORT, () => {
+    console.log(`WonDollArbi is listening on port ${PORT}`);
   });
 };
 
