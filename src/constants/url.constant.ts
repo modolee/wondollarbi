@@ -1,12 +1,18 @@
-export const USD_KRW_EXCHANGE_RATE_URL = {
-  KEBHANA:
-    'https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD',
-  YAHOO: 'https://api.manana.kr/exchange/rate/KRW/USD.json',
-};
+import { SOURCE, CURRENCY } from './text.constant';
 
-export const NAVER_STOCK_URL = {
-  SHINHAN:
-    'https://m.stock.naver.com/api/json/marketindex/marketIndexExchangeListCalcJson?bankType=SHB',
-  KEBHANA:
-    'https://m.stock.naver.com/api/json/marketindex/marketIndexExchangeListCalcJson?bankType=HNB',
+export const EXCHANGE_RATE_URL = {
+  [CURRENCY.USD]: {
+    [SOURCE.YAHOO_FINANCE]: 'https://api.manana.kr/exchange/rate/KRW/USD.json',
+    [SOURCE.SHINHAN_BANK]:
+      'https://m.stock.naver.com/api/json/marketindex/marketIndexExchangeListCalcJson?bankType=SHB',
+    [SOURCE.KEBHANA_BANK]:
+      'https://m.stock.naver.com/api/json/marketindex/marketIndexExchangeListCalcJson?bankType=HNB',
+  },
+  [CURRENCY.JPY]: {
+    [SOURCE.YAHOO_FINANCE]: 'https://api.manana.kr/exchange/rate/KRW/JPY.json',
+    [SOURCE.SHINHAN_BANK]:
+      'https://m.stock.naver.com/api/json/marketindex/marketIndexExchangeListCalcJson?bankType=SHB',
+    [SOURCE.KEBHANA_BANK]:
+      'https://m.stock.naver.com/api/json/marketindex/marketIndexExchangeListCalcJson?bankType=HNB',
+  },
 };

@@ -1,80 +1,97 @@
 import axios from 'axios';
 import { TimeHelper, TelegramHelper } from '../helpers';
-import {
-  NAVER_STOCK_URL,
-  USD_KRW_EXCHANGE_RATE_URL,
-} from '../constants/url.constant';
+import { EXCHANGE_RATE_URL } from '../constants/url.constant';
+import { CURRENCY, SOURCE } from '../constants/text.constant';
 
 export const fetchAndSendMessage = async () => {
-  const koreanExchangeRate = await fetchKoreanExchangeRate();
-  const realtimeExchangeRate = await fetchRealtimeExchangeRate();
+  const koreanExchangeRateUsd = await fetchKoreanExchangeRate(CURRENCY.USD);
+  const realtimeExchangeRateUsd = await fetchRealtimeExchangeRate(CURRENCY.USD);
 
   TelegramHelper.sendTelegramMessage(
-    `${koreanExchangeRate}\n\n${realtimeExchangeRate}`
+    `[${CURRENCY.USD}]\n\n${koreanExchangeRateUsd}\n${realtimeExchangeRateUsd}`
+  );
+
+  const koreanExchangeRateJpy = await fetchKoreanExchangeRate(CURRENCY.JPY);
+  const realtimeExchangeRateJpy = await fetchRealtimeExchangeRate(CURRENCY.JPY);
+
+  TelegramHelper.sendTelegramMessage(
+    `[${CURRENCY.JPY}]\n\n${koreanExchangeRateJpy}\n${realtimeExchangeRateJpy}`
   );
 };
 
-export const fetchKoreanExchangeRate = async (): Promise<string> => {
-  const hanabank = await fetchKoreanExchangeRateFromHanabank();
-  const shinhanbank = await fetchKoreanExchangeRateFromShinhanbank();
+export const fetchKoreanExchangeRate = async (
+  currency: CURRENCY
+): Promise<string> => {
+  const hanabank = await fetchKoreanExchangeRateFrom(
+    SOURCE.KEBHANA_BANK,
+    currency
+  );
+  const shinhanbank = await fetchKoreanExchangeRateFrom(
+    SOURCE.SHINHAN_BANK,
+    currency
+  );
 
   return `${hanabank}\n${shinhanbank}`;
 };
 
-const fetchRealtimeExchangeRate = async (): Promise<string> => {
-  const yahoo = await fetchRealtimeExchangeRateFromYahoo();
+const fetchRealtimeExchangeRate = async (
+  currency: CURRENCY
+): Promise<string> => {
+  const yahoo = await fetchRealtimeExchangeRateFrom(
+    SOURCE.YAHOO_FINANCE,
+    currency
+  );
 
   return `${yahoo}`;
 };
 
-export const fetchKoreanExchangeRateFromShinhanbank =
-  async (): Promise<string> => {
-    const header = '[신한은행]';
-    const data = await fetchData(NAVER_STOCK_URL.SHINHAN);
-
-    if (data) {
-      const exchangeList = data?.result;
-      const usd = exchangeList.find(
-        (exchange) => exchange.exchangeCode === 'USD'
-      );
-
-      const { closePrice: priceString, localTradedAt } = usd;
-      const priceNumber = Number.parseFloat(priceString.replace(',', ''));
-      const formattedDate = TimeHelper.format({
-        date: localTradedAt,
-      });
-
-      return `${header} ${formattedDate}\n${priceNumber}원 (살 때 ${(
-        priceNumber * 1.00175
-      ).toFixed(2)})`;
-    }
-
-    return `${header} 데이터 없음`;
-  };
-
-const fetchKoreanExchangeRateFromHanabank = async (): Promise<string> => {
-  const header = '[하나은행]';
-  const data = await fetchArrayData(USD_KRW_EXCHANGE_RATE_URL.KEBHANA);
+export const fetchKoreanExchangeRateFrom = async (
+  sourceType: SOURCE,
+  currency: CURRENCY
+): Promise<string> => {
+  const header = `[${sourceType}]`;
+  const data = await fetchData(EXCHANGE_RATE_URL[currency][sourceType]);
 
   if (data) {
-    const { date, time, basePrice, cashBuyingPrice, cashSellingPrice } = data;
-    return `${header} ${date} ${time}\n${basePrice}원 (살 때 ${(
-      basePrice * 1.00175
+    const exchangeList = data?.result;
+    const value = exchangeList.find(
+      (exchange) => exchange.exchangeCode === currency
+    );
+
+    const { calcPrice, localTradedAt } = value;
+    const formattedDate = TimeHelper.format({
+      date: localTradedAt,
+    });
+    let priceNumber = Number.parseFloat(calcPrice);
+    if (currency === CURRENCY.JPY) {
+      priceNumber *= 100;
+    }
+
+    return `${header} ${formattedDate}\n${priceNumber.toFixed(2)}원 (살 때 ${(
+      priceNumber * 1.00175
     ).toFixed(2)})`;
   }
 
   return `${header} 데이터 없음`;
 };
 
-const fetchRealtimeExchangeRateFromYahoo = async (): Promise<string> => {
-  const header = '[야후 파이낸스]';
-  const data = await fetchArrayData(USD_KRW_EXCHANGE_RATE_URL.YAHOO);
+const fetchRealtimeExchangeRateFrom = async (
+  sourceType: SOURCE,
+  currency: CURRENCY
+): Promise<string> => {
+  const header = `[${sourceType}]`;
+  const data = await fetchArrayData(EXCHANGE_RATE_URL[currency][sourceType]);
 
   if (data) {
     const { date, rate } = data;
-    return `${header} ${date}\n${rate}원 (팔 때 ${(rate * 0.99825).toFixed(
-      2
-    )})`;
+    let priceNumber = rate;
+    if (currency === CURRENCY.JPY) {
+      priceNumber *= 100;
+    }
+
+    return `${header} ${date}\n${priceNumber.toFixed(2)}원 (팔 때 ${(
+      priceNumber * 0.99825
+    ).toFixed(2)})`;
   }
 
   return `${header} 데이터 없음`;

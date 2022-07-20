@@ -1,24 +1,17 @@
-import {
-  fetchKoreanExchangeRate,
-  fetchKoreanExchangeRateFromShinhanbank,
-} from '../fetch';
+import { CURRENCY, SOURCE } from '../../constants/text.constant';
+import { fetchKoreanExchangeRateFrom } from '../fetch';
 
 describe('Fetch', () => {
   test('Fetch Korean USD', async () => {
     // GIVEN
 
     // WHEN
-    const result = await fetchKoreanExchangeRate();
+    const result = await fetchKoreanExchangeRateFrom(
+      SOURCE.SHINHAN_BANK,
+      CURRENCY.USD
+    );
 
     // THEN
-    console.log({ result });
-  });
-  test('Fetch Naver USD - SHINHAN', async () => {
-    // GIVEN
-    // WHEN
-    const result = await fetchKoreanExchangeRateFromShinhanbank();
-
-    // THEN
-    console.log({ result });
+    expect(result).not.toEqual(`[${SOURCE.SHINHAN_BANK}] 데이터 없음`);
   });
 });

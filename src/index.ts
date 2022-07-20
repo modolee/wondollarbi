@@ -1,6 +1,6 @@
 import express from 'express';
 import http from 'http';
-import { usdKrwExchangeRateJob } from './functions/schduler';
+import { exchangeRateJob } from './functions/schduler';
 import { fetchAndSendMessage } from './functions/fetch';
 
 const startServer = () => {
@@ -21,5 +21,5 @@ const startServer = () => {
   });
 };
 
-usdKrwExchangeRateJob.start();
+exchangeRateJob.start();
 startServer();
