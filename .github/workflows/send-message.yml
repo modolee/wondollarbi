@@ -1,0 +1,28 @@
+name: Send telegram message
+on:
+  workflow_dispatch:
+
+jobs:
+  send-telegram-message:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout # Repository 체크아웃
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
+      - name: Cache node modules # node modules 캐싱
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.OS }}-build-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.OS }}-build-
+            ${{ runner.OS }}-
+
+      - name: Install dependencies # Dependency 설치
+        run: yarn
+
+      - name: Send telegram message
+        run: yarn start
