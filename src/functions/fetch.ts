@@ -1,52 +1,58 @@
 import axios from 'axios';
+import { TimeHelper, TelegramHelper } from '../helpers';
 import {
   NAVER_STOCK_URL,
   USD_KRW_EXCHANGE_RATE_URL,
 } from '../constants/url.constant';
-import { sendTelegramMessage } from '../helpers/telegram.helper';
 
 export const fetchAndSendMessage = async () => {
   const koreanExchangeRate = await fetchKoreanExchangeRate();
   const realtimeExchangeRate = await fetchRealtimeExchangeRate();
 
-  sendTelegramMessage(`${koreanExchangeRate}\n\n${realtimeExchangeRate}`);
+  TelegramHelper.sendTelegramMessage(
+    `${koreanExchangeRate}\n\n${realtimeExchangeRate}`
+  );
 };
 
-export const fetchKoreanExchangeRate = async () => {
+export const fetchKoreanExchangeRate = async (): Promise<string> => {
   const hanabank = await fetchKoreanExchangeRateFromHanabank();
   const shinhanbank = await fetchKoreanExchangeRateFromShinhanbank();
 
   return `${hanabank}\n${shinhanbank}`;
 };
 
-const fetchRealtimeExchangeRate = async () => {
+const fetchRealtimeExchangeRate = async (): Promise<string> => {
   const yahoo = await fetchRealtimeExchangeRateFromYahoo();
 
   return `${yahoo}`;
 };
 
-export const fetchKoreanExchangeRateFromShinhanbank = async () => {
-  const header = '[신한은행]';
-  const data = await fetchData(NAVER_STOCK_URL.SHINHAN);
+export const fetchKoreanExchangeRateFromShinhanbank =
+  async (): Promise<string> => {
+    const header = '[신한은행]';
+    const data = await fetchData(NAVER_STOCK_URL.SHINHAN);
 
-  if (data) {
-    const exchangeList = data?.result;
-    const usd = exchangeList.find(
-      (exchange) => exchange.exchangeCode === 'USD'
-    );
+    if (data) {
+      const exchangeList = data?.result;
+      const usd = exchangeList.find(
+        (exchange) => exchange.exchangeCode === 'USD'
+      );
 
-    const { closePrice: priceString, localTradedAt } = usd;
-    const priceNumber = Number.parseFloat(priceString.replace(',', ''));
+      const { closePrice: priceString, localTradedAt } = usd;
+      const priceNumber = Number.parseFloat(priceString.replace(',', ''));
+      const formattedDate = TimeHelper.format({
+        date: localTradedAt,
+      });
 
-    return `${header} ${localTradedAt}\n${priceNumber}원 (살 때 ${(
-      priceNumber * 1.00175
-    ).toFixed(2)})`;
-  }
+      return `${header} ${formattedDate}\n${priceNumber}원 (살 때 ${(
+        priceNumber * 1.00175
+      ).toFixed(2)})`;
+    }
 
-  return `${header} 데이터 없음`;
-};
+    return `${header} 데이터 없음`;
+  };
 
-const fetchKoreanExchangeRateFromHanabank = async () => {
+const fetchKoreanExchangeRateFromHanabank = async (): Promise<string> => {
   const header = '[하나은행]';
   const data = await fetchArrayData(USD_KRW_EXCHANGE_RATE_URL.KEBHANA);
 
@@ -60,7 +66,7 @@ const fetchKoreanExchangeRateFromHanabank = async () => {
   return `${header} 데이터 없음`;
 };
 
-const fetchRealtimeExchangeRateFromYahoo = async () => {
+const fetchRealtimeExchangeRateFromYahoo = async (): Promise<string> => {
   const header = '[야후 파이낸스]';
   const data = await fetchArrayData(USD_KRW_EXCHANGE_RATE_URL.YAHOO);
 
@@ -74,13 +80,13 @@ const fetchRealtimeExchangeRateFromYahoo = async () => {
   return `${header} 데이터 없음`;
 };
 
-const fetchArrayData = async (url) => {
+const fetchArrayData = async (url: string) => {
   const result = await fetchData(url);
 
   return result && result[0];
 };
 
-const fetchData = async (url) => {
+const fetchData = async (url: string) => {
   const result = await axios.get(url);
 
   if (result && result.status === 200 && result.data) {

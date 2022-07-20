@@ -9,7 +9,7 @@ import { TELEGRAM } from '../constants/env.constant';
 
 const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM.TOKEN}/sendMessage?chat_id=${TELEGRAM.CHAT_ID}&parse_mode=HTML&text=`;
 
-export const sendTelegramMessage = async (message) => {
+export const sendTelegramMessage = async (message: string): Promise<void> => {
   try {
     const sendMessageApi = TELEGRAM_API_URL + encodeURI(message);
     await axios.get(sendMessageApi);
